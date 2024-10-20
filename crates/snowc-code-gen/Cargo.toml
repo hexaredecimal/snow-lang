@@ -7,6 +7,7 @@ edition = "2021"
 snowc-lexer = { path = "../snowc-lexer" }
 snowc-parse = { path = "../snowc-parse" }
 snowc-vm = { path = "../snowc-vm" }
+prettify-js = "0.1.0"
 
 [[bin]]
 name = "main"
