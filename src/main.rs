@@ -21,6 +21,7 @@ impl From<Vec<String>> for CompilerError {
     }
 }
 
+
 fn debug_tokens(flag: bool) -> impl FnOnce(String) -> Result<String, CompilerError> {
     move |src: String| {
         if flag {
@@ -126,10 +127,11 @@ fn main() {
                 let msg = format_compiler_message("Running");
                 let filename = setting.filename.unwrap_or_default();
                 eprintln!("{msg} {filename}");
-                let program = gen_code(&ast);
-                debug_program(&program);
+                let program = gen_code(&ast).unwrap();
+                println!("{program}");
+                /*debug_program(&program);
                 let mut vm = Machine::new(program, false);
-                vm.run();
+                vm.run();*/
             },
         );
 }
