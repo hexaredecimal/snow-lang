@@ -1,4 +1,5 @@
 mod args;
+use clap::error::Result;
 use snowc::error::Error;
 use snowc::{debug_program, gen_code, parse, walk, Expr, Machine, Scanner};
 use snowc_repl::repl;
@@ -124,11 +125,16 @@ fn main() {
         .map_or_else(
             handle_compiler_errors(setting.filename.clone().unwrap_or_default()),
             |ast| {
+                let program = timer("Codegen", || -> Result<String, CompilerError> {  
+                    let program = gen_code(&ast).unwrap();
+                    Ok(program)
+                }).unwrap();
+                if setting.verbose {
+                    println!("{program}");
+                }
                 let msg = format_compiler_message("Running");
                 let filename = setting.filename.unwrap_or_default();
                 eprintln!("{msg} {filename}");
-                let program = gen_code(&ast).unwrap();
-                println!("{program}");
                 /*debug_program(&program);
                 let mut vm = Machine::new(program, false);
                 vm.run();*/
