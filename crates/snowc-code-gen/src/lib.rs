@@ -98,10 +98,10 @@ fn gen_app(types: &mut Vec<TypeInfo>, app: App) -> String {
     let name = &app.name;
     let mut args = vec![]; 
     for arg in app.args {
-        args.push(gen_expr(types, &arg, true));
+        args.push(format!("({})", gen_expr(types, &arg, true)));
     }
 
-    format!("{name}({})", args.join(","))
+    format!("{name}{}", args.join(""))
 }
 
 fn gen_atom(atom: Atom) -> String {
