@@ -1,21 +1,30 @@
 use clap::{crate_description, crate_name, crate_version, Arg, ColorChoice, Command};
 
+#[derive(Debug)]
+pub enum Target {
+    JS, 
+    Java, 
+    VM
+}
+
 #[derive(Debug, Default)]
 pub struct Settings {
     pub filename: Option<String>,
+    pub target: Option<Target>,
     pub debug_token: bool,
     pub debug_ast: bool,
     pub debug_graph: bool,
     pub option_no_type_check: bool,
     pub option_compile_string: bool,
-    pub verbose: bool
+    pub verbose: bool,
+    pub run: bool,
 }
 
 pub fn cargs() -> Settings {
     let matches = Command::new(crate_name!())
         .color(ColorChoice::Always)
         .version(crate_version!())
-        .author("Cowboy8625 and Hexaredecimal")
+        .author("Cowboy8625, Hexaredecimal (JS Backend)")
         .about(crate_description!())
         .arg(Arg::new("filename"))
         .arg(
@@ -24,6 +33,13 @@ pub fn cargs() -> Settings {
                 .required(false)
                 .action(clap::ArgAction::SetTrue)
                 .help("Show Tokens as they are created"),
+        )
+        .arg(
+            Arg::new("target")
+                .long("target")
+                .required(false)
+                .action(clap::ArgAction::Set)
+                .help("Set target [JS/JAVA/VM]"),
         )
         .arg(
             Arg::new("debug-ast")
@@ -38,6 +54,13 @@ pub fn cargs() -> Settings {
                 .required(false)
                 .action(clap::ArgAction::SetTrue)
                 .help("Turns AST into a visual graph"),
+        )
+        .arg(
+            Arg::new("run")
+                .long("run")
+                .required(false)
+                .action(clap::ArgAction::SetTrue)
+                .help("Verbose output"),
         )
         .arg(
             Arg::new("dynamic")
@@ -69,6 +92,15 @@ pub fn cargs() -> Settings {
     if let Some(filename) = matches.get_one::<String>("filename") {
         setting.filename = Some(filename.to_string());
     }
+
+    if let Some(target) = matches.get_one::<String>("target") {
+        setting.target = match target.to_uppercase().as_str() {
+            "JS" => Some(Target::JS), 
+            "JAVA" => Some(Target::Java),
+            "VM" => Some(Target::VM), 
+            _ => panic!("Invalid target select: {target}")
+        }
+    }
     setting.debug_token = *matches
         .get_one::<bool>("debug-token")
         .expect("debug-token failed");
@@ -83,8 +115,7 @@ pub fn cargs() -> Settings {
     setting.option_compile_string = *matches
         .get_one::<bool>("from_string")
         .expect("from_string failed");
-    setting.verbose = *matches
-        .get_one::<bool>("verbose")
-        .expect("verbose failed");
+    setting.verbose = *matches.get_one::<bool>("verbose").expect("verbose failed");
+    setting.run = *matches.get_one::<bool>("run").expect("run failed");
     setting
 }
