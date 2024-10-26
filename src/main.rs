@@ -1,8 +1,12 @@
 mod args;
+use args::Target;
 use clap::error::Result;
 use snowc::error::Error;
 use snowc::{debug_program, gen_code, parse, walk, Expr, Machine, Scanner};
 use snowc_repl::repl;
+use snowc::js::js_gen_code;
+use snowc::java::java_gen_code; 
+
 #[derive(Debug)]
 enum CompilerError {
     NoFileGive,
@@ -21,7 +25,6 @@ impl From<Vec<String>> for CompilerError {
         Self::Type(value)
     }
 }
-
 
 fn debug_tokens(flag: bool) -> impl FnOnce(String) -> Result<String, CompilerError> {
     move |src: String| {
@@ -125,21 +128,77 @@ fn main() {
         .map_or_else(
             handle_compiler_errors(setting.filename.clone().unwrap_or_default()),
             |ast| {
-                let program = timer("Codegen", || -> Result<String, CompilerError> {  
-                    let program = gen_code(&ast).unwrap();
-                    Ok(program)
-                }).unwrap();
+                let program = timer("Codegen", || -> Result<String, CompilerError> {
+                    if let Some(target) = setting.target {
+                        let program = match target {
+                            Target::JS => js_gen_code(&ast).unwrap(), 
+                            Target::Java => java_gen_code(&ast).unwrap(),
+                            Target::VM => gen_code(&ast)
+                        };
+                        Ok(program)
+                    } else {
+                        Ok(gen_code(&ast))
+                    }
+                })
+                .unwrap();
                 if setting.verbose {
                     println!("{program}");
                 }
-                let msg = format_compiler_message("Running");
-                let filename = setting.filename.unwrap_or_default();
-                eprintln!("{msg} {filename}");
+
+                if setting.run {
+                    let msg = format_compiler_message("Running");
+                    let filename = setting.filename.unwrap_or_default();
+                    eprintln!("{msg} {filename}");
+                    use rquickjs::{
+                        CatchResultExt, Context, Function, Object, Result, Runtime, Value,
+                    };
+
+                    let rt = Runtime::new().unwrap();
+                    let ctx = Context::full(&rt).unwrap();
+
+                    let _ = ctx.with(|ctx| -> Result<()> {
+                        let global = ctx.globals();
+                        global.set(
+                            "__print",
+                            Function::new(ctx.clone(), print)?.with_name("__print")?,
+                        )?;
+                        ctx.eval::<(), _>(
+                            r#"
+                                    globalThis.console = {
+                                        log(...v) {
+                                            globalThis.__print(`${v.join(" ")}`)
+                                        }
+                                    }
+                                "#,
+                        )
+                        .unwrap();
+
+                        let console: Object = global.get("console")?;
+                        let js_log: Function = console.get("log")?;
+                        match ctx.eval::<Value, _>(program.as_bytes()).catch(&ctx) {
+                            Ok(ret) => match js_log.call::<(Value<'_>,), ()>((ret,)) {
+                                Err(err) => {
+                                    println!("{err}")
+                                }
+                                Ok(_) => {}
+                            },
+                            Err(err) => {
+                                println!("{err}");
+                            }
+                        }
+                        Ok(())
+                    });
+                }
+
                 /*debug_program(&program);
                 let mut vm = Machine::new(program, false);
                 vm.run();*/
             },
         );
+}
+
+fn print(s: String) {
+    println!("{s}");
 }
 
 fn timer<O, E, F>(msg: impl Into<String>, func: F) -> Result<O, E>
