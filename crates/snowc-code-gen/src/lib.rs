@@ -6,7 +6,7 @@ use snowc_vm::{Item, Label, Span, Text, Token, TokenOp};
 pub mod js;
 pub mod java;
 
-pub fn gen_code(input: &Vec<Expr>) -> Vec<u8> {
+pub fn gen_code(input: &Vec<Expr>) -> String {
     let program = vec![
         // .entry main
         Item::EntryPoint(Token::Id("main".into(), Span::default())),
@@ -45,9 +45,9 @@ pub fn gen_code(input: &Vec<Expr>) -> Vec<u8> {
     ];
     let program = snowc_vm::assemble_from_ast(&program).unwrap();
     for item in program.chunks(4) {
-        println!("{:?}", item);
+        //println!("{:?}", item);
     }
-    program
+    "".to_string()
 }
 
 
