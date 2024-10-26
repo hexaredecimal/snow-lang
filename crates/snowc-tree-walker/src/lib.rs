@@ -178,7 +178,10 @@ fn expr_closure_with_args(
 fn expr_app(expr: &Expr, args: &[Expr], span: Span, scope: &Scope) -> Result<Value> {
     let Expr::Atom(Atom::Id(name, _, span)) = expr else {
         let (Some(head), Some(tail)) = (expr.get_head(), expr.get_tail()) else {
-            let Expr::App(App { name, args, span, .. }) = expr else {
+            let Expr::App(App {
+                name, args, span, ..
+            }) = expr
+            else {
                 return Err(RuntimeError::InvalidArguments(span));
             };
             return expr_app(name, args, *span, scope);
@@ -238,7 +241,7 @@ fn expr_app(expr: &Expr, args: &[Expr], span: Span, scope: &Scope) -> Result<Val
         // use this function to get the length of an array
         "length" => {
             let Value::Array(array, span) = walk_expr(&args[0], scope)? else {
-                return Ok(Value::Int(0, *span))
+                return Ok(Value::Int(0, *span));
             };
             let len = array.len();
             Ok(Value::Int(len as i32, span))

@@ -242,11 +242,11 @@ fn pair_up_params<'a>(
         return expr;
     }
     let Expr::Closure(head, tail, _) = expr else {
-        // expr.span(), 
+        // expr.span(),
         panic!("unimplemented yet for '{expr}'");
     };
     let Expr::Atom(Atom::Id(name, _)) = &**head else {
-        // head.span(), 
+        // head.span(),
         panic!("unimplemented yet for '{expr}'");
     };
     type_func.push_arg(name);
@@ -291,9 +291,7 @@ pub fn type_check(ast: &[Expr]) -> Result<(), Vec<String>> {
             Expr::Func(name, _type_info, body, _) => {
                 let Some(Item::Func(type_func)) = env.get_mut(name) else {
                     // span.clone(),
-                    panic!(
-                        "function '{name}' missing type declaration"
-                    );
+                    panic!("function '{name}' missing type declaration");
                 };
                 let body = pair_up_params(name.into(), type_func, body);
                 let dec_return_type = type_func.return_type.clone();

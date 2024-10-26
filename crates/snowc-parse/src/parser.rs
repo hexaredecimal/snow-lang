@@ -47,7 +47,12 @@ pub fn parse(src: &str) -> ParserResult {
 /// add = (\x -> (\y -> x + y))
 /// ```
 fn function(tokens: &mut Vec<Token>) -> Result<Expr> {
-    let Some(Token::Ident(Ident{lexme: name, span: start, ..})) = tokens.get(0).cloned() else {
+    let Some(Token::Ident(Ident {
+        lexme: name,
+        span: start,
+        ..
+    })) = tokens.get(0).cloned()
+    else {
         let span = tokens.get(0).map(|t| t.span()).unwrap_or_default();
         return Err(Error::NotAFunction(span));
     };
@@ -130,7 +135,9 @@ pub(crate) fn expression(tokens: &mut Vec<Token>) -> Result<Expr> {
 }
 
 fn if_expression(tokens: &mut Vec<Token>) -> Result<Expr> {
-    let Some(Token::KeyWord(KeyWord{span: start, ..})) = consume_keyword_if(tokens, "if") else {
+    let Some(Token::KeyWord(KeyWord { span: start, .. })) =
+        consume_keyword_if(tokens, "if")
+    else {
         panic!("expected `if` keyword");
         // return equality(tokens);
     };
@@ -149,7 +156,7 @@ fn if_expression(tokens: &mut Vec<Token>) -> Result<Expr> {
 }
 
 fn lambda_expression(tokens: &mut Vec<Token>) -> Result<Expr> {
-    let Token::Ctrl(Ctrl{span: start, ..}) = tokens.remove(0) else {
+    let Token::Ctrl(Ctrl { span: start, .. }) = tokens.remove(0) else {
         panic!("expected `\\` or `λ` in lambda expression");
     };
     let args = get_function_args(tokens);
@@ -386,7 +393,7 @@ fn primary(tokens: &mut Vec<Token>) -> Result<Expr> {
         ))),
         Token::Ctrl(c) if c.lexme == "(" => {
             let expr = expression(tokens)?;
-            let Some(Token::Ctrl(Ctrl{pos, ..})) = consume_ctrl_if(tokens, ")") else {
+            let Some(Token::Ctrl(Ctrl { pos, .. })) = consume_ctrl_if(tokens, ")") else {
                 return Err(Error::UnclosedParen(expr.span()));
             };
             Ok(expr.map_position(|_| pos))
@@ -410,7 +417,8 @@ fn array(tokens: &mut Vec<Token>, start: Span) -> Result<Expr> {
         exprs.push(expr);
         consume_ctrl_if(tokens, ",");
     }
-    let Some(Token::Ctrl(Ctrl{span: end, pos, ..})) = consume_ctrl_if(tokens, "]") else {
+    let Some(Token::Ctrl(Ctrl { span: end, pos, .. })) = consume_ctrl_if(tokens, "]")
+    else {
         return Err(Error::UnclosedArray(start).into());
     };
     let span = Span::from((start, end));
@@ -418,9 +426,7 @@ fn array(tokens: &mut Vec<Token>, start: Span) -> Result<Expr> {
 }
 
 fn is_atom(token: Option<&Token>) -> bool {
-    let Some(token) = token else {
-        return false
-    };
+    let Some(token) = token else { return false };
     let lexme = match token {
         Token::KeyWord(KeyWord { lexme, .. }) => lexme.as_str(),
         Token::Ctrl(Ctrl { lexme, .. }) => lexme.as_str(),
@@ -490,9 +496,13 @@ fn test_get_op() {
 }
 
 fn consume_ctrl(tokens: &mut Vec<Token>, expected: &str) -> Result<Token> {
-    let Some(Token::Ctrl(Ctrl{lexme, span, ..})) = tokens.get(0) else {
+    let Some(Token::Ctrl(Ctrl { lexme, span, .. })) = tokens.get(0) else {
         let span = tokens.get(0).map(|t| t.span()).unwrap_or_default();
-        return Err(Error::UnexpectedToken(expected.to_string(), tokens.get(0).map(|t| t.to_string()).unwrap_or_default(), span));
+        return Err(Error::UnexpectedToken(
+            expected.to_string(),
+            tokens.get(0).map(|t| t.to_string()).unwrap_or_default(),
+            span,
+        ));
     };
     if lexme != expected {
         return Err(Error::UnexpectedToken(
@@ -526,9 +536,13 @@ fn consume_op(tokens: &mut Vec<Token>, expected: &str) -> Result<Token> {
 }
 
 fn consume_keyword(tokens: &mut Vec<Token>, expected: &str) -> Result<Token> {
-    let Some(Token::KeyWord(KeyWord{lexme, span, ..})) = tokens.get(0) else {
+    let Some(Token::KeyWord(KeyWord { lexme, span, .. })) = tokens.get(0) else {
         let span = tokens.get(0).map(|t| t.span()).unwrap_or_default();
-        return Err(Error::UnexpectedToken(expected.to_string(), tokens.get(0).map(|t| t.to_string()).unwrap_or_default(), span));
+        return Err(Error::UnexpectedToken(
+            expected.to_string(),
+            tokens.get(0).map(|t| t.to_string()).unwrap_or_default(),
+            span,
+        ));
     };
     if lexme != expected {
         return Err(Error::UnexpectedToken(

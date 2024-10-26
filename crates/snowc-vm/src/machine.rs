@@ -68,7 +68,7 @@ impl Machine {
         let &[a, b, c, d] = &self.heap[offset..offset + 4] else {
             panic!("offset not within the the heap allocation range");
         };
-        let data = u32::from_le_bytes([a,b,c,d]);
+        let data = u32::from_le_bytes([a, b, c, d]);
         self.registers[self.get_next_u8() as usize] = data;
         self.get_next_u8();
     }
@@ -274,7 +274,6 @@ impl Machine {
         self.sp = self.bp;
         self.bp = self.stack.pop().unwrap() as usize;
         self.pc = self.stack.pop().unwrap() as usize;
-
     }
 
     fn hlt(&mut self) {

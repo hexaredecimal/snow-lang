@@ -6,8 +6,7 @@ pub fn debug_opcode(chunk: &[u8]) -> String {
     };
     let opcode = OpCode::from(a);
     let addr = match opcode {
-        OpCode::Call |
-        OpCode::Jmp | OpCode::Jeq | OpCode::Jne | OpCode::Prts => {
+        OpCode::Call | OpCode::Jmp | OpCode::Jeq | OpCode::Jne | OpCode::Prts => {
             u32::from_be_bytes([0, b, c, d])
         }
         OpCode::Load => u32::from_be_bytes([0, 0, c, d]),
@@ -63,7 +62,7 @@ pub fn hex_dump_chunks(program: &[u8]) {
 pub fn debug_program(program: &[u8]) {
     let mut chunks = program[..64].chunks(4);
     // Magin Number
-    let Some(&[0x7F, 0x6e, 0x6f, 0x77]) = chunks.next()else  {
+    let Some(&[0x7F, 0x6e, 0x6f, 0x77]) = chunks.next() else {
         panic!("invalid magic number");
     };
     // start of .text
